@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The AI Glossary — Every Term in AI, One Directory</title>
+<style>
+  :root{
+    --bg:#000000; --panel:#0a0a09; --panel2:#131311; --border:#242420;
+    --text:#f2f2ee; --text-dim:#a3a89c; --text-faint:#68695f;
+    --accent:#2ecc71; --accent-strong:#16a34a; --on-accent:#04120a;
+    --lvl-beginner:#7cf2ab; --lvl-practitioner:#2ecc71; --lvl-expert:#1f8f4e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1360px; margin:0 auto; padding:0 40px;}
+
+  header{padding:64px 0 40px;}
+  header h1{margin:0 0 12px; font-size:clamp(30px,4vw,46px); font-weight:800; letter-spacing:-0.02em; color:var(--text);}
+  header p{margin:0; color:var(--text-dim); font-size:15.5px; max-width:600px; line-height:1.5;}
+  .stat-line{margin-top:14px !important; color:var(--text-faint) !important; font-size:13px !important;}
+
+  .controls{
+    display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+    padding-bottom:32px; border-bottom:1px solid var(--border);
+  }
+  .search-wrap{position:relative; flex:1; min-width:240px; max-width:420px;}
+  #search{
+    width:100%; padding:11px 14px 11px 40px; border-radius:8px; border:1px solid var(--border);
+    background:var(--panel); color:var(--text); font-size:14px; outline:none;
+  }
+  #search::placeholder{color:var(--text-faint);}
+  #search:focus{border-color:var(--accent);}
+  .search-icon{position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-faint); display:flex; pointer-events:none;}
+  .search-icon svg{width:15px; height:15px; display:block;}
+
+  .level-toggle{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-left:auto;}
+  .level-toggle button{
+    padding:9px 16px; background:var(--panel); color:var(--text-dim); border:none; cursor:pointer;
+    font-size:12.5px; font-weight:600; transition:all .15s;
+  }
+  .level-toggle button.active{background:var(--accent); color:var(--on-accent);}
+
+  .directory{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    border-top:1px solid var(--border); border-left:1px solid var(--border);
+    margin-bottom:80px;
+  }
+  .cat-cell{border-right:1px solid var(--border); border-bottom:1px solid var(--border); padding:30px 32px;}
+  .cat-header{
+    display:flex; align-items:baseline; gap:8px; margin-bottom:18px;
+    font-size:15px; font-weight:700; color:var(--text);
+  }
+  .cat-count{font-size:11.5px; font-weight:600; color:var(--text-faint);}
+
+  .cat-list{display:flex; flex-direction:column; gap:1px;}
+
+  .term-row{break-inside:avoid; margin-bottom:2px;}
+  .term-head{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:none; border:none; border-left:2px solid transparent; padding:8px 10px 8px 9px; margin:0; cursor:pointer;
+    font-family:inherit; font-size:13.5px; color:var(--text-dim);
+    border-radius:5px; transition:background .12s, color .12s, border-color .12s;
+  }
+  .term-head:hover{background:var(--panel2); color:var(--text); border-left-color:var(--accent);}
+  .term-row.expanded .term-head{color:var(--text); font-weight:600; background:var(--panel2); border-left-color:var(--accent);}
+  .term-dot{width:6px; height:6px; border-radius:50%; flex-shrink:0;}
+  .term-name{flex:1;}
+
+  .term-cta{
+    position:relative; width:19px; height:19px; border-radius:50%; flex-shrink:0;
+    border:1px solid var(--border); transition:all .15s;
+  }
+  .term-cta::before, .term-cta::after{
+    content:""; position:absolute; top:50%; left:50%; background:var(--text-faint);
+    transform:translate(-50%,-50%); transition:background .15s;
+  }
+  .term-cta::before{width:8px; height:1.5px;}
+  .term-cta::after{width:1.5px; height:8px;}
+  .term-head:hover .term-cta{border-color:var(--accent); transform:scale(1.08);}
+  .term-head:hover .term-cta::before, .term-head:hover .term-cta::after{background:var(--accent);}
+  .term-row.expanded .term-cta{background:var(--accent); border-color:var(--accent); transform:rotate(45deg);}
+  .term-row.expanded .term-cta::before, .term-row.expanded .term-cta::after{background:var(--on-accent);}
+
+  .term-def-wrap{display:grid; grid-template-rows:0fr; transition:grid-template-rows .22s ease;}
+  .term-row.expanded .term-def-wrap{grid-template-rows:1fr;}
+  .term-def-inner{overflow:hidden;}
+  .term-def-text{
+    margin:2px 4px 10px 19px; font-size:12.8px; line-height:1.55; color:var(--text-dim);
+    padding-left:10px; border-left:2px solid var(--border);
+  }
+  .term-era{
+    display:inline-block; margin:0 4px 10px 19px; padding-left:10px; border-left:2px solid transparent;
+    font-size:11px; color:var(--text-faint);
+  }
+
+  .empty-state{
+    grid-column:1/-1; display:flex; flex-direction:column; align-items:center; text-align:center;
+    padding:64px 20px 56px; animation:popIn .35s ease-out;
+  }
+  @keyframes popIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .empty-icon-wrap{position:relative; width:64px; height:64px; margin-bottom:18px;}
+  .empty-icon{width:100%; height:100%; color:var(--text-faint); transform-origin:60% 60%; animation:noShake 2.2s ease-in-out infinite;}
+  @keyframes noShake{
+    0%,100%{ transform:rotate(0deg); } 12%{ transform:rotate(-14deg); } 24%{ transform:rotate(11deg); }
+    36%{ transform:rotate(-8deg); } 48%{ transform:rotate(5deg); } 60%,100%{ transform:rotate(0deg); }
+  }
+  .empty-badge{
+    position:absolute; top:-4px; right:-4px; width:22px; height:22px; border-radius:50%;
+    background:var(--accent); color:var(--on-accent); font-size:12px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; animation:pulseBadge 2.2s ease-in-out infinite;
+  }
+  @keyframes pulseBadge{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.18); } }
+  .empty-title{font-size:16px; font-weight:700; color:var(--text); max-width:440px; line-height:1.4;}
+  .empty-sub{font-size:13.5px; color:var(--text-faint); margin-top:8px; max-width:400px; line-height:1.5;}
+  .empty-reset{
+    margin-top:20px; padding:9px 18px; border-radius:999px; border:1px solid var(--accent);
+    background:transparent; color:var(--accent); font-size:13px; font-weight:600; cursor:pointer; transition:all .15s;
+  }
+  .empty-reset:hover{background:var(--accent); color:var(--on-accent);}
+
+  footer{padding:0 0 60px; color:var(--text-faint); font-size:12.5px;}
+  footer strong{color:var(--text-dim);}
+
+  .jump-nav{margin-top:20px; display:flex; gap:12px; flex-wrap:wrap;}
+  .jump-nav a{
+    display:inline-flex; align-items:center; gap:8px; cursor:pointer; text-decoration:none;
+    padding:9px 16px; border-radius:999px; border:1px solid var(--accent); background:var(--panel);
+    color:var(--text); font-size:13px; font-weight:600; transition:all .15s;
+  }
+  .jump-nav a::after{content:"\2192"; color:var(--accent); transition:transform .15s;}
+  .jump-nav a:hover{background:var(--accent); color:var(--on-accent); box-shadow:0 0 0 3px rgba(46,204,113,.18);}
+  .jump-nav a:hover::after{color:var(--on-accent); transform:translateX(3px);}
+  .jump-nav a:hover::after{transform:translateX(3px);}
+
+  .section-heading{padding:56px 0 28px; border-top:1px solid var(--border); margin-top:24px;}
+  .section-heading h2{margin:0 0 10px; font-size:clamp(22px,3vw,30px); font-weight:800; letter-spacing:-0.02em; color:var(--text);}
+  .section-heading p{margin:0; color:var(--text-dim); font-size:14.5px; max-width:620px; line-height:1.5;}
+  .section-heading .stat-line{margin-top:10px !important;}
+
+  .cost-key{display:flex; gap:18px; flex-wrap:wrap; margin-top:16px;}
+  .cost-key span{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text-faint);}
+  .cost-key .term-dot{width:6px; height:6px; border-radius:50%;}
+
+  .course-link{display:inline-block; margin:0 4px 12px 19px; padding-left:10px; border-left:2px solid transparent; font-size:12px; color:var(--accent); text-decoration:none;}
+  .course-link:hover{text-decoration:underline;}
+  .course-org{color:var(--text-faint); font-weight:400;}
+
+  @media (max-width:640px){
+    .wrap{padding:0 20px;}
+    .cat-cell.two-col .cat-list{column-count:1;}
+    .level-toggle{margin-left:0;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>The AI Glossary</h1>
+    <p>Every corner of AI in one directory — from the Turing Test to the Model Context Protocol, explained at your level.</p>
+    <p class="stat-line" id="headerStat"></p>
+    <nav class="jump-nav">
+      <a href="#glossary-section">Term directory</a>
+      <a href="#courses-section">Academies &amp; courses</a>
+    </nav>
+  </header>
+
+  <div class="controls" id="glossary-section">
+    <div class="search-wrap">
+      <span class="search-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </span>
+      <input id="search" type="text" placeholder="Search all terms…" />
+    </div>
+    <div class="level-toggle">
+      <button data-mode="beginner" class="active">Beginner</button>
+      <button data-mode="technical">Practitioner+</button>
+    </div>
+  </div>
+
+  <div class="directory" id="directory"></div>
+
+  <div class="section-heading" id="courses-section">
+    <h2>AI Academies &amp; Courses</h2>
+    <p>The official learning programs behind the tools and labs in this glossary — where to actually go learn Claude, ChatGPT, PyTorch, or GPU programming, straight from the source.</p>
+    <p class="stat-line" id="coursesStat"></p>
+    <div class="cost-key">
+      <span><span class="term-dot" style="background:var(--lvl-beginner)"></span> Free</span>
+      <span><span class="term-dot" style="background:var(--lvl-practitioner)"></span> Free to learn, paid certificate/exam</span>
+      <span><span class="term-dot" style="background:var(--lvl-expert)"></span> Mostly paid</span>
+    </div>
+  </div>
+
+  <div class="directory" id="coursesDirectory"></div>
+
+  <footer><strong>The AI Glossary</strong> · a living reference that keeps pace with the field.</footer>
+</div>
+
+<script>
+const CATEGORIES = [
+  {key:"foundations", label:"Foundations & History"},
+  {key:"coreml", label:"Core Machine Learning"},
+  {key:"deeplearning", label:"Deep Learning & Architectures"},
+  {key:"nlp", label:"NLP & Language Models"},
+  {key:"genai", label:"Generative AI"},
+  {key:"cv", label:"Computer Vision"},
+  {key:"agentic", label:"Agentic AI & Tooling"},
+  {key:"rl", label:"Reinforcement Learning"},
+  {key:"safety", label:"AI Safety & Alignment"},
+  {key:"infra", label:"Infrastructure & Compute"},
+  {key:"mlops", label:"MLOps & Data"},
+  {key:"robotics", label:"Robotics & Embodied AI"},
+  {key:"business", label:"Business & Everyday Terms"},
+  {key:"research", label:"Landmark Models & Research"},
+];
+
+const TERMS = [
+// ---- Foundations & History ----
+{t:"Artificial Intelligence (AI)", c:"foundations", l:"beginner", e:"1950s",
+  b:"Getting computers to do things that normally need human smarts, like recognizing a face or holding a conversation.",
+  x:"A field of computer science building systems that perform tasks associated with human intelligence, from symbolic reasoning to modern statistical learning."},
+{t:"Turing Test", c:"foundations", l:"beginner", e:"1950",
+  b:"A 1950 thought experiment: if you can't tell whether you're chatting with a human or a machine, the machine passes.",
+  x:"A behavioral benchmark for machine intelligence based on indistinguishability from human conversation, proposed by Alan Turing."},
+{t:"Symbolic AI (GOFAI)", c:"foundations", l:"expert", e:"1950s–80s",
+  b:"Early AI built from hand-written logical rules, like a giant ‘if this, then that’ flowchart.",
+  x:"‘Good Old-Fashioned AI’ — approaches representing knowledge as explicit symbols manipulated by logic, dominant before statistical learning took over."},
+{t:"Expert System", c:"foundations", l:"practitioner", e:"1970s–80s",
+  b:"A program that mimics a human specialist by following thousands of rules an expert wrote down.",
+  x:"A rule-based system encoding domain expertise as an inference engine over a curated knowledge base, dominant in 1980s industry."},
+{t:"AI Winter", c:"foundations", l:"practitioner", e:"1970s, 1980s",
+  b:"A period when AI research funding and interest collapsed after early hype failed to deliver.",
+  x:"A recurring historical pattern — notably the 1970s and late 1980s — where inflated expectations for AI led to funding cuts and stalled progress."},
+{t:"Cybernetics", c:"foundations", l:"expert", e:"1940s",
+  b:"An early field studying feedback and control in machines and living things, a precursor to AI.",
+  x:"An interdisciplinary study of regulatory and feedback systems across machines, organisms, and organizations, foundational to early computing theory."},
+{t:"Neural Network", c:"foundations", l:"beginner", e:"1950s–present",
+  b:"A computer model loosely inspired by brain cells that learns patterns from examples instead of being explicitly programmed.",
+  x:"A parameterized function of layered weighted connections and nonlinear activations, trained via gradient-based optimization."},
+{t:"Perceptron", c:"foundations", l:"expert", e:"1958",
+  b:"The first, simplest ‘neuron’ model from 1958 — it could only learn straight-line decisions.",
+  x:"A single-layer linear classifier by Frank Rosenblatt; its limits on non-linear problems contributed to the first AI Winter."},
+{t:"Dartmouth Workshop", c:"foundations", l:"expert", e:"1956",
+  b:"The 1956 summer conference where the term ‘artificial intelligence’ was coined and the field was born.",
+  x:"The foundational 1956 workshop at Dartmouth College, organized by McCarthy, Minsky, Rochester, and Shannon, that launched AI as a research field."},
+{t:"Chinese Room Argument", c:"foundations", l:"expert", e:"1980",
+  b:"A famous philosophical objection: following rules to produce the right words doesn't mean you actually understand them.",
+  x:"John Searle's 1980 thought experiment arguing that symbol manipulation alone does not constitute genuine understanding or consciousness."},
+
+// ---- Core Machine Learning ----
+{t:"Machine Learning (ML)", c:"coreml", l:"beginner", e:"1950s–present",
+  b:"Instead of programming exact rules, you show a computer lots of examples and it learns the pattern itself.",
+  x:"A subfield of AI where systems improve at a task by learning statistical patterns from data rather than following explicit rules."},
+{t:"Supervised Learning", c:"coreml", l:"beginner", e:"Core method",
+  b:"Teaching a model with labeled examples, like flashcards with the answer on the back.",
+  x:"A paradigm training a model on input-output pairs to minimize prediction error, generalizing to unseen inputs."},
+{t:"Unsupervised Learning", c:"coreml", l:"practitioner", e:"Core method",
+  b:"Giving a model data with no answers attached and letting it find its own structure.",
+  x:"Learning that discovers latent structure — clusters, dimensions, density — in unlabeled data without target outputs."},
+{t:"Semi-Supervised Learning", c:"coreml", l:"expert", e:"Core method",
+  b:"Training with a small pile of labeled examples plus a much bigger pile of unlabeled ones.",
+  x:"A hybrid paradigm combining a limited labeled dataset with a larger unlabeled one to improve learning efficiency."},
+{t:"Self-Supervised Learning", c:"coreml", l:"practitioner", e:"2018–present",
+  b:"The model creates its own ‘quiz questions’ from raw data, like predicting a missing word, instead of needing human labels.",
+  x:"A paradigm generating supervisory signals directly from unlabeled data (e.g. masked prediction), underlying most modern pretraining."},
+{t:"Overfitting", c:"coreml", l:"beginner", e:"Core concept",
+  b:"When a model memorizes the practice questions instead of learning the subject, and fails on the real test.",
+  x:"A failure mode where a model fits training-set noise, yielding high training accuracy but poor generalization."},
+{t:"Underfitting", c:"coreml", l:"beginner", e:"Core concept",
+  b:"When a model is too simple to even learn the pattern in the training data, let alone new data.",
+  x:"A failure mode where a model lacks the capacity or training to capture the underlying structure of the data."},
+{t:"Gradient Descent", c:"coreml", l:"practitioner", e:"Core method",
+  b:"The method a model uses to get better: nudge its internal settings toward fewer mistakes, over and over.",
+  x:"An iterative optimization algorithm updating parameters in the direction that reduces a loss function."},
+{t:"Backpropagation", c:"coreml", l:"expert", e:"1986",
+  b:"The technique that tells a neural network exactly which of its millions of internal knobs to adjust after a mistake.",
+  x:"An algorithm applying the chain rule to efficiently compute loss gradients with respect to every network parameter."},
+{t:"Regularization", c:"coreml", l:"expert", e:"Core method",
+  b:"Techniques that discourage a model from over-memorizing, keeping it more general-purpose.",
+  x:"Methods (L1/L2 penalties, dropout, early stopping) that constrain model complexity to reduce overfitting."},
+{t:"Support Vector Machine (SVM)", c:"coreml", l:"expert", e:"1990s–2000s",
+  b:"A classic method that draws the best possible dividing line between two groups of data.",
+  x:"A supervised classifier finding the maximum-margin hyperplane separating classes, optionally via non-linear kernels."},
+{t:"Decision Tree", c:"coreml", l:"beginner", e:"Core method",
+  b:"A flowchart of yes/no questions leading to a prediction, like a game of 20 questions.",
+  x:"A non-parametric model recursively splitting data by feature thresholds to minimize impurity."},
+{t:"Random Forest", c:"coreml", l:"practitioner", e:"2001",
+  b:"Lots of decision trees voting together, which usually beats asking just one tree.",
+  x:"An ensemble method aggregating predictions from many decision trees trained on random subsets of data and features."},
+{t:"Bias-Variance Tradeoff", c:"coreml", l:"expert", e:"Core concept",
+  b:"The balancing act between a model being too simple (misses patterns) and too complex (memorizes noise).",
+  x:"The fundamental tension between error from overly simplistic assumptions (bias) and error from sensitivity to training data (variance)."},
+
+// ---- Deep Learning & Architectures ----
+{t:"Deep Learning", c:"deeplearning", l:"beginner", e:"2006–present",
+  b:"Machine learning using neural networks with many stacked layers, letting them learn much more complex patterns.",
+  x:"A subfield of ML using multi-layer neural networks to learn hierarchical representations directly from raw data."},
+{t:"Convolutional Neural Network (CNN)", c:"deeplearning", l:"practitioner", e:"2012 breakout",
+  b:"A network specialized for images — it scans small patches to detect edges, shapes, and eventually objects.",
+  x:"An architecture using learned convolutional filters and pooling to exploit spatial locality, historically dominant in vision."},
+{t:"Recurrent Neural Network (RNN)", c:"deeplearning", l:"expert", e:"2010s",
+  b:"An older network built to handle sequences by remembering what it just saw as it moves forward.",
+  x:"An architecture with feedback connections maintaining a hidden state across time steps, largely superseded by Transformers."},
+{t:"LSTM", c:"deeplearning", l:"expert", e:"1997",
+  b:"A smarter version of an RNN that's better at remembering things from far back in a sequence.",
+  x:"Long Short-Term Memory — a gated RNN variant designed to mitigate vanishing gradients and retain long-range dependencies."},
+{t:"Transformer", c:"deeplearning", l:"practitioner", e:"2017–present",
+  b:"The architecture behind almost every modern AI model — it reads whole sequences at once and weighs which parts matter most.",
+  x:"A neural architecture built on self-attention rather than recurrence, enabling parallelized training; basis of GPT, BERT, and Claude."},
+{t:"Attention Mechanism", c:"deeplearning", l:"expert", e:"2014–2017",
+  b:"A way for a model to decide which other words in a sentence to ‘pay attention to’ when interpreting meaning.",
+  x:"A mechanism computing weighted combinations of value vectors based on query-key similarity, letting models focus dynamically on context."},
+{t:"Autoencoder", c:"deeplearning", l:"expert", e:"1980s–present",
+  b:"A network trained to compress data down and then rebuild it, learning what's essential in the process.",
+  x:"An architecture trained to reconstruct its input through a compressed bottleneck representation, used for compression and anomaly detection."},
+{t:"Generative Adversarial Network (GAN)", c:"deeplearning", l:"practitioner", e:"2014–2021",
+  b:"Two networks compete: one tries to fake realistic data, the other tries to catch the fakes, and both get better.",
+  x:"A framework pitting a generator against a discriminator in a minimax game, historically a leading approach to image synthesis before diffusion models."},
+{t:"Graph Neural Network (GNN)", c:"deeplearning", l:"expert", e:"2017–present",
+  b:"A network designed for data shaped like a web of connections, like social networks or molecules.",
+  x:"An architecture that learns representations over graph-structured data by passing messages along edges between nodes."},
+{t:"Mixture of Experts (MoE)", c:"deeplearning", l:"expert", e:"2022–present",
+  b:"A big model made of many smaller specialist sub-models, where only a few get used for any given input.",
+  x:"An architecture routing each input to a sparse subset of specialized sub-networks (‘experts’), increasing capacity without proportional compute cost."},
+{t:"Activation Function", c:"deeplearning", l:"expert", e:"Core concept",
+  b:"The small math trick inside each neuron that lets networks learn curvy, complex patterns instead of just straight lines.",
+  x:"A non-linear function (ReLU, GELU, etc.) applied after a layer's weighted sum, enabling networks to model non-linear relationships."},
+{t:"Dropout", c:"deeplearning", l:"expert", e:"2014",
+  b:"Randomly ‘turning off’ some neurons during training so the model can't lean too hard on any one of them.",
+  x:"A regularization technique that randomly zeroes a fraction of activations during training to reduce overfitting."},
+
+// ---- NLP & Language Models ----
+{t:"Natural Language Processing (NLP)", c:"nlp", l:"beginner", e:"1950s–present",
+  b:"The branch of AI focused on understanding and generating human language.",
+  x:"A field of AI concerned with enabling computers to process, understand, and generate natural language text and speech."},
+{t:"Large Language Model (LLM)", c:"nlp", l:"beginner", e:"2018–present",
+  b:"A very large AI model trained on huge amounts of text that can write, summarize, translate, and answer questions.",
+  x:"A Transformer-based model with typically billions of parameters, trained on massive text corpora, showing emergent language capabilities at scale."},
+{t:"Tokenization", c:"nlp", l:"beginner", e:"Core concept",
+  b:"Chopping text into small chunks — sometimes whole words, sometimes pieces — that a model reads and writes.",
+  x:"Converting raw text into a sequence of discrete tokens from a fixed vocabulary, the basic unit models operate on and are priced by."},
+{t:"Embedding (vector)", c:"nlp", l:"practitioner", e:"2013–present",
+  b:"Turning words or text into lists of numbers so a computer can measure how similar two things are.",
+  x:"A dense vector representation where geometric distance in the space approximates semantic similarity — backbone of search and RAG."},
+{t:"BERT", c:"nlp", l:"expert", e:"2018",
+  b:"An early, influential Google model that got very good at understanding text, though not at generating it.",
+  x:"Bidirectional Encoder Representations from Transformers — a pretrained encoder trained via masked-language-modeling, widely fine-tuned for understanding tasks."},
+{t:"GPT", c:"nlp", l:"beginner", e:"2018–present",
+  b:"‘Generative Pre-trained Transformer’ — a model family trained to predict the next word, which turns out to be enough to write and reason.",
+  x:"A decoder-only Transformer pretrained autoregressively on next-token prediction, then adapted via fine-tuning and RLHF."},
+{t:"Fine-tuning", c:"nlp", l:"practitioner", e:"Core method",
+  b:"Taking an already-trained model and giving it extra, focused training on a specific task or dataset.",
+  x:"Continuing training of a pretrained model's weights on a smaller, task- or domain-specific dataset to specialize its behavior."},
+{t:"Pretraining", c:"nlp", l:"practitioner", e:"Core method",
+  b:"The first, massive training phase where a model reads huge amounts of general text before it's specialized.",
+  x:"The initial, compute-intensive training phase on broad, often self-supervised objectives over web-scale data, producing a general-purpose base model."},
+{t:"Perplexity", c:"nlp", l:"expert", e:"Core metric",
+  b:"A score for how ‘surprised’ a language model is by real text — lower means it predicted the text better.",
+  x:"A measurement of how well a probability model predicts a sample, computed from average negative log-likelihood; lower is better."},
+{t:"Named Entity Recognition (NER)", c:"nlp", l:"expert", e:"Core task",
+  b:"Picking out names of people, places, companies, and dates from a block of text automatically.",
+  x:"An NLP task that identifies and classifies spans of text into predefined categories such as person, organization, or location."},
+{t:"Zero-shot / Few-shot Learning", c:"nlp", l:"practitioner", e:"2020–present",
+  b:"Getting a model to do a new task with no examples (zero-shot) or just a couple examples (few-shot) instead of full retraining.",
+  x:"A model's ability to perform a task given no (zero-shot) or very few (few-shot) task-specific examples, typically via prompting."},
+{t:"Context Window", c:"nlp", l:"beginner", e:"Core concept",
+  b:"The amount of text an AI model can ‘see’ and remember at once during a conversation.",
+  x:"The maximum number of tokens a model can attend to in a single forward pass, bounding how much prior text it can condition on."},
+
+// ---- Generative AI ----
+{t:"Generative AI", c:"genai", l:"beginner", e:"2022–present",
+  b:"AI that creates new content — text, images, audio, or video — rather than just analyzing existing data.",
+  x:"A class of models that learn the underlying distribution of training data well enough to generate novel, similar samples."},
+{t:"Diffusion Model", c:"genai", l:"practitioner", e:"2020–present",
+  b:"An image-generating AI that starts with random noise and gradually ‘cleans it up’ into a coherent picture.",
+  x:"A generative model that learns to reverse a gradual noising process, sampling data by iteratively denoising from randomness."},
+{t:"Prompt Engineering", c:"genai", l:"beginner", e:"2022–present",
+  b:"The skill of writing your instructions to an AI clearly and cleverly to get better answers.",
+  x:"The practice of designing input text to reliably steer a model's output distribution toward a desired behavior, without changing its weights."},
+{t:"Hallucination", c:"genai", l:"beginner", e:"Core limitation",
+  b:"When an AI confidently states something false or made-up as if it were fact.",
+  x:"A generated output that is fluent and plausible but factually incorrect or unsupported by training data or context."},
+{t:"RLHF", c:"genai", l:"expert", e:"2017–present",
+  b:"A training step where humans rate a model's answers, and the model learns to produce more answers people prefer.",
+  x:"Reinforcement Learning from Human Feedback — fine-tuning a model's policy using a reward model trained on human preference comparisons."},
+{t:"Text-to-Image", c:"genai", l:"beginner", e:"2021–present",
+  b:"Typing a description and getting a generated picture back.",
+  x:"A generative task mapping natural-language prompts to synthesized images, typically via diffusion or autoregressive models."},
+{t:"Text-to-Video", c:"genai", l:"practitioner", e:"2023–present",
+  b:"Typing a description and getting a short generated video clip back.",
+  x:"A generative task producing coherent video sequences from text prompts, extending image-generation techniques across the time dimension."},
+{t:"Latent Space", c:"genai", l:"expert", e:"Core concept",
+  b:"The compressed, abstract ‘idea space’ a generative model works in before turning it into a final image or text.",
+  x:"A learned lower-dimensional representation space in which a generative model organizes and manipulates concepts before decoding to output."},
+{t:"Style Transfer", c:"genai", l:"practitioner", e:"2015–present",
+  b:"Repainting one image in the artistic style of another, like turning a photo into a Van Gogh painting.",
+  x:"A technique applying the visual style of one image to the content of another using a trained neural network."},
+{t:"Inpainting", c:"genai", l:"practitioner", e:"Core technique",
+  b:"Erasing part of an image and having AI realistically fill in what should be there.",
+  x:"A generative technique that fills in missing or masked regions of an image in a way consistent with the surrounding content."},
+{t:"Temperature (sampling)", c:"genai", l:"expert", e:"Core parameter",
+  b:"A setting controlling how ‘creative’ vs. predictable an AI's answers are.",
+  x:"A hyperparameter scaling logits before sampling; lower values sharpen the output distribution, higher values increase randomness."},
+{t:"Seed (generation)", c:"genai", l:"expert", e:"Core parameter",
+  b:"A starting number that determines the ‘randomness’ of a generation — same seed, same prompt, same result.",
+  x:"A fixed initial value for a random number generator that makes otherwise stochastic generation reproducible."},
+
+// ---- Computer Vision ----
+{t:"Computer Vision", c:"cv", l:"beginner", e:"1960s–present",
+  b:"The field of AI focused on letting computers ‘see’ and interpret images and video.",
+  x:"A field of AI enabling machines to extract meaningful information from visual inputs such as images and video."},
+{t:"Image Classification", c:"cv", l:"beginner", e:"Core task",
+  b:"Sorting a picture into a category, like ‘cat’ or ‘dog.’",
+  x:"A vision task assigning a single label (or ranked labels) to an entire input image."},
+{t:"Object Detection", c:"cv", l:"practitioner", e:"Core task",
+  b:"Finding and drawing boxes around specific objects within a picture.",
+  x:"A vision task that localizes and classifies multiple objects within an image via bounding boxes."},
+{t:"Semantic Segmentation", c:"cv", l:"expert", e:"Core task",
+  b:"Labeling every single pixel of an image with what it belongs to, not just drawing a box around it.",
+  x:"A vision task assigning a class label to every pixel in an image, producing a dense per-pixel understanding of the scene."},
+{t:"Optical Character Recognition (OCR)", c:"cv", l:"beginner", e:"1970s–present",
+  b:"Turning a photo of text into text a computer can actually read and edit.",
+  x:"A technology that converts images of typed or handwritten text into machine-encoded text."},
+{t:"Facial Recognition", c:"cv", l:"beginner", e:"Core application",
+  b:"Identifying or verifying a person's identity from an image of their face.",
+  x:"A computer vision application matching or verifying identity based on facial features extracted from images."},
+{t:"Pose Estimation", c:"cv", l:"expert", e:"Core task",
+  b:"Figuring out the position of a person's joints and limbs from an image or video.",
+  x:"A vision task that predicts the spatial positions of key body joints from images or video, used in motion capture and fitness apps."},
+{t:"ImageNet", c:"cv", l:"practitioner", e:"2009–2017",
+  b:"A giant labeled photo collection that became the standard test for ‘how good is your image AI.’",
+  x:"A large-scale labeled image dataset and annual competition that catalyzed progress in computer vision and benchmarking practices."},
+{t:"YOLO", c:"cv", l:"expert", e:"2015–present",
+  b:"‘You Only Look Once’ — a fast object detection model that scans a whole image in a single pass.",
+  x:"A family of real-time object detection models that predict bounding boxes and class probabilities in a single forward pass."},
+
+// ---- Agentic AI & Tooling ----
+{t:"Agentic AI", c:"agentic", l:"beginner", e:"2024–present",
+  b:"AI that doesn't just answer one question — it can plan multiple steps, use tools, and take actions toward a goal.",
+  x:"Systems combining an LLM with planning, tool use, memory, and iterative execution loops to autonomously pursue multi-step goals."},
+{t:"AI Agent", c:"agentic", l:"beginner", e:"2024–present",
+  b:"A specific AI ‘worker’ set up to accomplish a task on its own, often by browsing, calling software, or writing code.",
+  x:"An LLM-driven process wrapped in a control loop — observe, plan, act, reflect — with access to tools, memory, and often sub-agents."},
+{t:"Model Context Protocol (MCP)", c:"agentic", l:"expert", e:"Late 2024",
+  b:"A shared, standard way for AI models to connect to outside tools and data, like a universal plug.",
+  x:"An open protocol standardizing how AI applications discover and invoke external tools, resources, and prompts via client-server primitives."},
+{t:"Tool Use / Function Calling", c:"agentic", l:"practitioner", e:"2023–present",
+  b:"An AI's ability to reach outside itself — running a calculator, searching the web — instead of just generating text from memory.",
+  x:"A capability where a model outputs a structured call to an external function or API and incorporates the result into its response."},
+{t:"Reasoning Model", c:"agentic", l:"practitioner", e:"2024–present",
+  b:"A newer kind of AI model that ‘thinks’ through a problem in multiple internal steps before answering.",
+  x:"A model variant trained to generate extended intermediate reasoning traces before a final answer, improving multi-step accuracy."},
+{t:"Chain-of-Thought (CoT)", c:"agentic", l:"practitioner", e:"2022–present",
+  b:"Getting an AI to show its step-by-step reasoning instead of jumping straight to an answer.",
+  x:"A prompting or training technique eliciting intermediate reasoning steps prior to a final answer, improving multi-step task performance."},
+{t:"Thinking Budget / Reasoning Effort", c:"agentic", l:"expert", e:"2025–present",
+  b:"A dial that tells an AI model how much time to spend ‘thinking’ before answering.",
+  x:"An inference parameter capping the internal reasoning tokens a model generates before responding, trading cost/latency for accuracy."},
+{t:"Multi-Agent System", c:"agentic", l:"expert", e:"2024–present",
+  b:"Several AI agents working together on a task, each with a different role.",
+  x:"An architecture where multiple LLM-driven agents coordinate — via orchestration or message-passing — to solve tasks beyond one agent's scope."},
+{t:"Orchestration", c:"agentic", l:"practitioner", e:"Core concept",
+  b:"The logic that decides which AI agent or tool handles which part of a task.",
+  x:"The control layer coordinating task decomposition, routing, and sequencing across multiple agents, tools, or model calls."},
+{t:"Agent Memory", c:"agentic", l:"practitioner", e:"Core concept",
+  b:"An AI agent's ability to remember things across sessions instead of forgetting everything when a chat ends.",
+  x:"Persistent storage an agent reads from and writes to across sessions, enabling continuity beyond a single context window."},
+{t:"Prefix Caching", c:"agentic", l:"expert", e:"2024–present",
+  b:"A speed trick where an AI system reuses its earlier ‘thinking’ on a repeated chunk of text instead of redoing it.",
+  x:"An inference optimization caching internal attention states for a recurring prompt prefix, lowering latency and cost for repeated workloads."},
+{t:"Guardrails", c:"agentic", l:"beginner", e:"Core concept",
+  b:"Rules and checks built around an AI system to stop it from doing something harmful or off-policy.",
+  x:"Programmatic or model-based constraints layered around a model or agent to bound its behavior within acceptable limits."},
+{t:"Retrieval-Augmented Generation (RAG)", c:"agentic", l:"practitioner", e:"2020–present",
+  b:"The AI looks up relevant documents first, then writes its answer using them, instead of relying only on memorized training.",
+  x:"An architecture that retrieves relevant passages from an external knowledge store and injects them into context to ground generation."},
+
+// ---- Reinforcement Learning ----
+{t:"Reinforcement Learning (RL)", c:"rl", l:"practitioner", e:"1980s–present",
+  b:"Training by trial and error — the model gets rewarded for doing well and learns to chase more reward over time.",
+  x:"A framework where an agent learns a policy to maximize cumulative reward through interaction with an environment."},
+{t:"Reward Model", c:"rl", l:"expert", e:"Core component",
+  b:"A separate model trained to score how ‘good’ an AI's response is, used to guide further training.",
+  x:"A model trained on human or automated preference data to predict a scalar reward, used to guide policy optimization."},
+{t:"Policy", c:"rl", l:"expert", e:"Core concept",
+  b:"The strategy an RL agent follows to decide what action to take in a given situation.",
+  x:"A function (often a neural network) mapping states to actions, or action probabilities, that an RL agent follows."},
+{t:"Markov Decision Process (MDP)", c:"rl", l:"expert", e:"Core theory",
+  b:"The mathematical framework describing an environment where an agent's next state depends only on its current state and action.",
+  x:"A formalism defining states, actions, transition probabilities, and rewards, underlying most reinforcement learning theory."},
+{t:"Q-Learning", c:"rl", l:"expert", e:"1989",
+  b:"A classic RL method that learns the expected value of taking each possible action in each situation.",
+  x:"A model-free RL algorithm that learns an action-value function estimating expected future reward for state-action pairs."},
+{t:"Exploration vs. Exploitation", c:"rl", l:"practitioner", e:"Core concept",
+  b:"The tradeoff between trying new things to learn more (exploration) and sticking with what already works (exploitation).",
+  x:"A core RL tradeoff between gathering new information about the environment and maximizing reward using current knowledge."},
+{t:"Proximal Policy Optimization (PPO)", c:"rl", l:"expert", e:"2017",
+  b:"A popular, stable algorithm for training an RL policy without letting it change too drastically in one step.",
+  x:"A widely used policy-gradient RL algorithm that constrains policy updates to avoid destructively large changes, popular for RLHF."},
+{t:"Self-Play", c:"rl", l:"practitioner", e:"2016–present",
+  b:"An AI training itself by repeatedly playing against copies of itself, improving each round.",
+  x:"A training method where an agent improves by competing against past or current versions of itself, used by AlphaGo and AlphaZero."},
+
+// ---- AI Safety & Alignment ----
+{t:"Alignment", c:"safety", l:"practitioner", e:"Ongoing",
+  b:"Making sure an AI system actually does what humans intend, not just what was technically said.",
+  x:"The research problem of ensuring an AI system's goals, behaviors, and outputs remain consistent with human values and intentions."},
+{t:"AI Safety", c:"safety", l:"beginner", e:"Ongoing",
+  b:"The broad effort to make sure AI systems are helpful and don't cause serious harm as they get more capable.",
+  x:"An interdisciplinary field addressing risks from AI systems — misuse, misalignment, robustness failures — spanning research, policy, and governance."},
+{t:"Algorithmic Bias", c:"safety", l:"beginner", e:"Ongoing",
+  b:"When an AI system produces unfair or skewed results for certain groups of people.",
+  x:"Systematic, unfair skew in model outputs correlated with sensitive attributes, typically from unrepresentative training data or labels."},
+{t:"Explainability (XAI)", c:"safety", l:"expert", e:"Ongoing",
+  b:"Tools that help humans understand why an AI made a particular decision, instead of it being a black box.",
+  x:"Methods for making a model's internal decision process legible to humans, important for trust, debugging, and compliance."},
+{t:"Red Teaming", c:"safety", l:"practitioner", e:"2022–present",
+  b:"Deliberately trying to trick or break an AI system before release, to find and fix its weaknesses.",
+  x:"Adversarial testing where researchers systematically probe a model for harmful or unsafe outputs prior to deployment."},
+{t:"Jailbreak", c:"safety", l:"beginner", e:"2022–present",
+  b:"A crafted prompt designed to trick an AI into ignoring its safety rules.",
+  x:"An input specifically crafted to bypass a model's safety training or guardrails and elicit disallowed behavior."},
+{t:"Constitutional AI", c:"safety", l:"expert", e:"2022",
+  b:"Training an AI to follow a written set of principles, using the AI's own judgment against those principles instead of only human raters.",
+  x:"An alignment technique, developed by Anthropic, where a model critiques and revises its own outputs against a set of written principles."},
+{t:"Interpretability", c:"safety", l:"expert", e:"Ongoing",
+  b:"Trying to understand what's actually happening inside a neural network's ‘black box.’",
+  x:"The study of a model's internal representations and computations, aiming to explain how and why it produces its outputs."},
+{t:"Existential Risk (X-risk)", c:"safety", l:"expert", e:"Ongoing",
+  b:"The concern that sufficiently advanced AI could pose a catastrophic threat to humanity if poorly controlled.",
+  x:"A category of risk in which advanced AI systems could cause irreversible, civilization-scale harm, a focus of long-term AI safety research."},
+{t:"Responsible AI", c:"safety", l:"beginner", e:"Ongoing",
+  b:"Building and deploying AI in a way that's fair, transparent, and accountable.",
+  x:"An organizational practice and framework for developing AI systems with attention to fairness, transparency, privacy, and accountability."},
+
+// ---- Infrastructure & Compute ----
+{t:"GPU Acceleration", c:"infra", l:"practitioner", e:"2006–present",
+  b:"Using graphics cards, originally built for video games, to do the massive math training an AI model requires.",
+  x:"Leveraging GPUs' parallel architecture to accelerate the matrix multiplications underlying neural network training and inference."},
+{t:"TPU", c:"infra", l:"expert", e:"2016–present",
+  b:"Google's custom chip built specifically to run AI workloads faster and more efficiently than general-purpose hardware.",
+  x:"Tensor Processing Unit — an application-specific integrated circuit designed by Google to accelerate neural network computation."},
+{t:"Model Weights", c:"infra", l:"practitioner", e:"Core concept",
+  b:"The millions or billions of learned numbers inside a trained model that encode everything it ‘knows.’",
+  x:"The learned parameters of a neural network, adjusted during training, that collectively define the model's behavior."},
+{t:"Parameter Count", c:"infra", l:"beginner", e:"Core concept",
+  b:"A rough measure of a model's size — how many internal ‘knobs’ it has, often in the billions.",
+  x:"The total number of learnable weights in a model, commonly used, imperfectly, as a proxy for model capacity."},
+{t:"Quantization", c:"infra", l:"expert", e:"Core technique",
+  b:"Shrinking a model by storing its numbers with less precision, making it faster and cheaper to run with a small accuracy cost.",
+  x:"A compression technique reducing the numerical precision of model weights (e.g. 32-bit to 4-bit) to cut memory and compute costs."},
+{t:"Distributed Training", c:"infra", l:"expert", e:"Core technique",
+  b:"Splitting the work of training a huge model across many machines at once.",
+  x:"Training a model across multiple GPUs or machines in parallel, using data and model parallelism to handle scale."},
+{t:"Inference", c:"infra", l:"beginner", e:"Core concept",
+  b:"The step where a trained model actually generates an answer for you, as opposed to when it was being trained.",
+  x:"The process of running a trained model on new input to produce an output, as distinct from the training phase."},
+{t:"Latency (AI)", c:"infra", l:"beginner", e:"Core metric",
+  b:"How long you wait between asking an AI something and getting a response.",
+  x:"The time delay between a request to a model and the delivery of its response, a key metric for real-time AI applications."},
+{t:"FLOPs", c:"infra", l:"expert", e:"Core metric",
+  b:"A unit for counting how much raw computation a model's training or a single answer required.",
+  x:"Floating Point Operations — a standard unit measuring the computational cost of training or running a model."},
+
+// ---- MLOps & Data ----
+{t:"MLOps", c:"mlops", l:"practitioner", e:"2018–present",
+  b:"The practice of reliably building, deploying, and monitoring machine learning models in production, like DevOps for AI.",
+  x:"A set of practices for deploying, monitoring, and maintaining ML models in production reliably and efficiently."},
+{t:"Training Data", c:"mlops", l:"beginner", e:"Core concept",
+  b:"The examples a model learns from before it's ever used on new questions.",
+  x:"The dataset used to fit a model's parameters during training, whose quality and coverage directly shape model behavior."},
+{t:"Data Labeling", c:"mlops", l:"beginner", e:"Core process",
+  b:"Humans, or other tools, tagging raw data with the correct answers so a model can learn from it.",
+  x:"The process of annotating raw data with target labels, often the biggest bottleneck in supervised learning pipelines."},
+{t:"Synthetic Data", c:"mlops", l:"practitioner", e:"2023–present",
+  b:"Artificially generated training data, often created by another AI model, instead of collected from the real world.",
+  x:"Artificially generated data used to supplement or replace real-world training data, increasingly used to train frontier models."},
+{t:"Benchmark", c:"mlops", l:"beginner", e:"Core concept",
+  b:"A standard test used to compare how different AI models perform on the same task.",
+  x:"A standardized dataset and task used to measure and compare model performance across research groups and versions."},
+{t:"Evaluation (Eval)", c:"mlops", l:"practitioner", e:"Core process",
+  b:"The process of systematically testing how well a model performs, beyond just eyeballing a few answers.",
+  x:"The systematic process of measuring a model's performance, safety, or behavior against defined criteria or benchmarks."},
+{t:"Data Drift", c:"mlops", l:"expert", e:"Core concept",
+  b:"When the real-world data a deployed model sees starts to look different from what it was trained on, hurting accuracy.",
+  x:"A change in the statistical properties of production input data relative to training data, degrading model performance over time."},
+{t:"Vector Database", c:"mlops", l:"practitioner", e:"2020–present",
+  b:"A database built to store and search embeddings by similarity instead of exact matches.",
+  x:"A database optimized for storing and performing similarity search over high-dimensional embedding vectors, core infrastructure for RAG."},
+{t:"A/B Testing (ML)", c:"mlops", l:"practitioner", e:"Core process",
+  b:"Showing two versions of a model, or feature, to different users to see which performs better.",
+  x:"An experimental method comparing two model or system variants on live traffic to measure real-world impact before full rollout."},
+
+// ---- Robotics & Embodied AI ----
+{t:"Robotics", c:"robotics", l:"beginner", e:"1950s–present",
+  b:"The field combining AI, mechanics, and electronics to build machines that can act in the physical world.",
+  x:"An interdisciplinary field integrating AI, mechanical engineering, and control systems to design machines that perceive and act physically."},
+{t:"Embodied AI", c:"robotics", l:"practitioner", e:"2019–present",
+  b:"AI that learns and acts through a physical, or simulated, body, not just by reading text.",
+  x:"AI research focused on agents that perceive and act within a physical or simulated environment, as opposed to disembodied text/image models."},
+{t:"SLAM", c:"robotics", l:"expert", e:"1986–present",
+  b:"How a robot builds a map of an unfamiliar space while simultaneously figuring out where it is on that map.",
+  x:"Simultaneous Localization and Mapping — algorithms that let a robot construct a map of an unknown environment while tracking its own position within it."},
+{t:"Sim-to-Real Transfer", c:"robotics", l:"expert", e:"2017–present",
+  b:"Training a robot's AI in a simulated world, then getting it to work in the messier real world.",
+  x:"The challenge and set of techniques for transferring policies trained in simulation to real-world robotic systems, bridging the ‘reality gap.’"},
+{t:"Autonomous Vehicle", c:"robotics", l:"beginner", e:"2000s–present",
+  b:"A vehicle that can perceive its environment and drive itself with little or no human input.",
+  x:"A vehicle equipped with sensors and AI systems capable of perceiving its environment and navigating without continuous human control."},
+{t:"Physical AI", c:"robotics", l:"practitioner", e:"2024–present",
+  b:"A newer umbrella term for AI systems designed to understand and act in the physical world, like robots and self-driving cars.",
+  x:"An emerging term, popularized around 2024, for AI systems, especially in robotics, designed to perceive, reason about, and act within physical environments."},
+
+// ---- Business & Everyday Terms ----
+{t:"Prompt", c:"business", l:"beginner", e:"Core concept",
+  b:"The text you type to an AI model to get a response.",
+  x:"The input text provided to a language model, which conditions its next-token predictions and thus its output."},
+{t:"Token", c:"business", l:"beginner", e:"Core concept",
+  b:"A small chunk of text that's the basic unit an AI model reads and writes, and usually how usage is priced.",
+  x:"The atomic unit of text an LLM processes; API usage and context window limits are measured in tokens, not characters or words."},
+{t:"API", c:"business", l:"beginner", e:"Core concept",
+  b:"A way for one piece of software to talk to another — how an app sends a prompt to a model and gets a response back.",
+  x:"Application Programming Interface — a defined interface allowing developers to programmatically send requests to and receive responses from a model."},
+{t:"Foundation Model", c:"business", l:"practitioner", e:"2021–present",
+  b:"A large, general-purpose AI model meant to be a base that many different products get built on top of.",
+  x:"A large-scale pretrained model designed for broad adaptability via fine-tuning or prompting across many downstream tasks."},
+{t:"Open-source vs. Closed Model", c:"business", l:"beginner", e:"Core distinction",
+  b:"Open models let anyone download and run the AI's weights themselves; closed models are only accessible through the company's app or API.",
+  x:"A distinction between models with publicly released weights versus proprietary models accessible only via hosted API."},
+{t:"Copilot", c:"business", l:"beginner", e:"2021–present",
+  b:"An AI assistant built directly into a piece of software to help you work faster inside it.",
+  x:"A product pattern embedding an LLM-based assistant directly within an existing application's workflow, rather than a standalone chat interface."},
+{t:"Chatbot", c:"business", l:"beginner", e:"1960s–present",
+  b:"A program you converse with in natural language, ranging from simple scripted bots to full LLM-powered assistants.",
+  x:"A conversational interface, historically rule-based and now typically LLM-powered, designed to simulate natural-language dialogue with users."},
+{t:"AI-native", c:"business", l:"practitioner", e:"2023–present",
+  b:"A product built from the ground up around AI, rather than AI being bolted onto an existing product.",
+  x:"Describes a product or workflow designed from first principles around AI capabilities, rather than having AI features added after the fact."},
+{t:"Vibe Coding", c:"business", l:"practitioner", e:"2025",
+  b:"Building software by describing what you want in plain language and letting an AI write and iterate on the code.",
+  x:"An informal term, popularized in 2025, for a development style where a person guides an AI coding agent through natural-language intent rather than writing code directly."},
+{t:"Compute", c:"business", l:"beginner", e:"Ongoing",
+  b:"Shorthand for the raw processing power — chips, servers, electricity — needed to train or run AI models.",
+  x:"A shorthand for the computational resources required to train or run AI models, now a major strategic and economic factor in the field."},
+
+// ---- Landmark Models & Research ----
+{t:"“Attention Is All You Need”", c:"research", l:"expert", e:"2017",
+  b:"The 2017 research paper that introduced the Transformer, the architecture behind virtually every major AI model today.",
+  x:"The 2017 Google paper introducing the Transformer architecture, which replaced recurrence with self-attention and reshaped the field."},
+{t:"AlexNet", c:"research", l:"expert", e:"2012",
+  b:"The 2012 image-recognition model whose landslide ImageNet win is widely seen as deep learning's breakout moment.",
+  x:"A deep CNN that won the 2012 ImageNet competition by a large margin, catalyzing the modern deep learning era through GPU-accelerated training."},
+{t:"AlphaGo", c:"research", l:"beginner", e:"2016",
+  b:"DeepMind's AI that beat the world's best Go players in 2016, a landmark moment for reinforcement learning.",
+  x:"A reinforcement-learning system by DeepMind that defeated a world champion Go player in 2016, combining deep neural networks with tree search."},
+{t:"GPT-3", c:"research", l:"beginner", e:"2020",
+  b:"OpenAI's 2020 model that showed large language models could perform many tasks just from a prompt, without task-specific training.",
+  x:"A 175-billion-parameter language model released by OpenAI in 2020, notable for strong few-shot performance across many NLP tasks."},
+{t:"Stable Diffusion", c:"research", l:"beginner", e:"2022",
+  b:"A widely used, openly released image-generation model that helped kick off the text-to-image boom in 2022.",
+  x:"An open-weight latent diffusion model released in 2022, notable for making high-quality text-to-image generation broadly accessible."},
+{t:"Llama", c:"research", l:"beginner", e:"2023–present",
+  b:"Meta's family of openly released language models, widely used as a base for other AI projects and products.",
+  x:"A family of open-weight foundation language models released by Meta, widely adopted as a base for research and commercial fine-tuning."},
+{t:"Claude", c:"research", l:"beginner", e:"2023–present",
+  b:"Anthropic's family of AI models, built with a strong emphasis on safety and helpfulness.",
+  x:"A family of large language models developed by Anthropic, trained in part using Constitutional AI methods to align behavior with a set of principles."},
+{t:"Chinchilla Scaling Laws", c:"research", l:"expert", e:"2022",
+  b:"Research showing that many early large models were undertrained relative to their size, and smaller models trained on more data could do better.",
+  x:"Findings from DeepMind's 2022 Chinchilla paper showing that, for a fixed compute budget, model size and training data should scale together."},
+{t:"Emergent Abilities", c:"research", l:"practitioner", e:"2022",
+  b:"Skills that suddenly show up in a model only once it crosses a certain size or scale, rather than improving gradually.",
+  x:"Capabilities that appear discontinuously in large models once a scale threshold is crossed, not present or predictable from smaller versions."},
+];
+
+// ---- AI Academies & Courses ----
+// Researched Aug 2026. "avabel" from the original request didn't match any real AI
+// company or course we could verify — this list covers the confirmed official
+// learning programs from major model labs, infra providers, and dev tool makers.
+const COURSE_GROUPS = [
+  {key:"labs", label:"Frontier Model Labs"},
+  {key:"infra", label:"Cloud & Infrastructure"},
+  {key:"devtools", label:"Dev Tools & Frameworks"},
+  {key:"platforms", label:"Multi-Vendor Learning Platforms"},
+];
+
+const COURSES = [
+  {org:"Anthropic", program:"Anthropic Academy", g:"labs", cost:"free",
+    desc:"Hands-on courses on the Claude API, Model Context Protocol, agent skills, and general AI fluency.",
+    url:"https://anthropic.skilljar.com/"},
+  {org:"OpenAI", program:"OpenAI Academy", g:"labs", cost:"freemium",
+    desc:"An AI Foundations course plus ChatGPT and API workshops, with a Credly-verified certificate available.",
+    url:"https://academy.openai.com/"},
+  {org:"Google", program:"Google AI Essentials & Google Skills", g:"labs", cost:"freemium",
+    desc:"Machine Learning Crash Course, generative AI primers, and the professional ML Engineer certificate track.",
+    url:"https://skills.google/"},
+  {org:"Meta", program:"PyTorch Tutorials & Llama Resources", g:"labs", cost:"free",
+    desc:"Official deep-learning tutorials and guides for fine-tuning and deploying Meta's open Llama models.",
+    url:"https://pytorch.org/tutorials/"},
+  {org:"Microsoft", program:"Microsoft Learn: AI", g:"labs", cost:"freemium",
+    desc:"Self-paced paths from Azure AI Fundamentals (AI-900) through AI Engineer, plus Copilot workflow training.",
+    url:"https://learn.microsoft.com/training/ai/"},
+
+  {org:"NVIDIA", program:"Deep Learning Institute (DLI)", g:"infra", cost:"freemium",
+    desc:"Self-paced GPU computing, generative AI, and deep learning courses — several free with certificates.",
+    url:"https://www.nvidia.com/en-us/training/"},
+  {org:"AWS", program:"AWS Skill Builder", g:"infra", cost:"freemium",
+    desc:"600+ courses spanning AI Practitioner to ML Specialty certification paths; training is free, exams are paid.",
+    url:"https://skillbuilder.aws/"},
+  {org:"IBM", program:"IBM SkillsBuild", g:"infra", cost:"free",
+    desc:"Free AI fundamentals across NLP, computer vision, and AI ethics, with shareable Credly credentials.",
+    url:"https://skillsbuild.org/"},
+  {org:"Databricks", program:"Databricks Academy", g:"infra", cost:"freemium",
+    desc:"Data and AI engineering courses leading to Databricks' generative AI and ML certification exams.",
+    url:"https://www.databricks.com/learn/training/home"},
+
+  {org:"Hugging Face", program:"Hugging Face Learn", g:"devtools", cost:"free",
+    desc:"A library of free self-paced courses on LLMs, AI agents, diffusion models, and fine-tuning open models.",
+    url:"https://huggingface.co/learn"},
+  {org:"LangChain", program:"LangChain Academy", g:"devtools", cost:"free",
+    desc:"Hands-on courses for building agents and workflows with LangGraph and the LangChain framework.",
+    url:"https://academy.langchain.com/"},
+  {org:"Weights & Biases", program:"W&B Courses", g:"devtools", cost:"free",
+    desc:"Short, practical courses on training, evaluating, and monitoring ML and LLM systems in production.",
+    url:"https://wandb.ai/site/courses/"},
+  {org:"Lovable", program:"Lovable Academy", g:"devtools", cost:"free",
+    desc:"Free tutorials, templates, and guided paths — including an 11-lesson “build your first app” course — for building full apps with AI prompting instead of code.",
+    url:"https://academy.lovable.app/academy"},
+
+  {org:"DeepLearning.AI", program:"Short Courses & Specializations", g:"platforms", cost:"freemium",
+    desc:"Andrew Ng's platform, built with OpenAI, Google, and AWS — free short courses plus paid specializations.",
+    url:"https://www.deeplearning.ai/"},
+  {org:"Coursera", program:"AI Certificate Programs", g:"platforms", cost:"freemium",
+    desc:"Hosts official AI certificates from Google, IBM, and DeepLearning.AI; free to audit, paid for credentials.",
+    url:"https://www.coursera.org/"},
+  {org:"Kaggle", program:"Kaggle Learn", g:"platforms", cost:"free",
+    desc:"Bite-sized, hands-on courses on Python, machine learning, and deep learning using real datasets.",
+    url:"https://www.kaggle.com/learn"},
+];
+const expandedCourses = new Set();
+
+function costClass(cost){ return cost==="free" ? "lvl-beginner" : cost==="paid" ? "lvl-expert" : "lvl-practitioner"; }
+function costLabel(cost){ return cost==="free" ? "Free" : cost==="paid" ? "Mostly paid" : "Free to learn, paid certificate/exam"; }
+
+function toggleCourse(id){
+  if(expandedCourses.has(id)) expandedCourses.delete(id); else expandedCourses.add(id);
+  renderCourses();
+}
+
+function courseRowHTML(course){
+  const id = slug(course.org + "-" + course.program);
+  const isOpen = expandedCourses.has(id);
+  return `
+    <div class="term-row ${isOpen?'expanded':''}">
+      <button class="term-head" onclick="toggleCourse('${id}')">
+        <span class="term-dot" style="background:var(--${costClass(course.cost)})" title="${costLabel(course.cost)}"></span>
+        <span class="term-name">${course.program} <span class="course-org">— ${course.org}</span></span>
+        <span class="term-cta"></span>
+      </button>
+      <div class="term-def-wrap"><div class="term-def-inner">
+        <div class="term-def-text">${course.desc}</div>
+        <span class="term-era">${costLabel(course.cost)}</span>
+        <a class="course-link" href="${course.url}" target="_blank" rel="noopener noreferrer">Visit official page &#8599;</a>
+      </div></div>
+    </div>`;
+}
+
+function courseGroupHTML(group){
+  const rows = COURSES.filter(c => c.g===group.key);
+  if(rows.length===0) return '';
+  return `
+    <div class="cat-cell">
+      <div class="cat-header">${group.label} <span class="cat-count">${rows.length}</span></div>
+      <div class="cat-list">${rows.map(courseRowHTML).join('')}</div>
+    </div>`;
+}
+
+function renderCourses(){
+  document.getElementById('coursesDirectory').innerHTML = COURSE_GROUPS.map(courseGroupHTML).join('');
+  document.getElementById('coursesStat').textContent = `${COURSES.length} official programs across ${COURSE_GROUPS.length} groups`;
+}
+
+let mode = "beginner";
+let query = "";
+const expandedTerms = new Set();
+
+const EMPTY_QUIPS = [
+  {title:"Zero hits. Even a 1M-token context window couldn't find this one.", sub:"Try a shorter word, or check the spelling — models aren't the only ones that hallucinate typos."},
+  {title:"This search just got a low confidence score.", sub:"No terms matched. Try broadening your query."},
+  {title:"404: term not found.", sub:"Unlike some language models, we'd rather say “we don't know” than make one up."},
+  {title:"Out of tokens on this one.", sub:"Nothing in the glossary matches yet — try a related word or an acronym instead."},
+  {title:"Retrieval came back empty.", sub:"No documents matched your query. RAG can't augment what doesn't exist (yet)."},
+  {title:"That term hasn't been trained into this model.", sub:"It might be too new, too niche, or just misspelled. Try again?"},
+];
+let wasEmpty = false;
+let currentQuip = null;
+
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+function levelClass(l){ return l==="beginner" ? "lvl-beginner" : l==="expert" ? "lvl-expert" : "lvl-practitioner"; }
+function levelLabel(l){ return l==="beginner" ? "Beginner-friendly" : l==="expert" ? "Deep cut" : "Practitioner"; }
+function textMatches(t, q){
+  if(!q) return true;
+  return t.t.toLowerCase().includes(q) || t.b.toLowerCase().includes(q) || t.x.toLowerCase().includes(q);
+}
+
+function toggleTerm(id){
+  if(expandedTerms.has(id)) expandedTerms.delete(id); else expandedTerms.add(id);
+  render();
+}
+
+function clearSearch(){
+  query = "";
+  document.getElementById('search').value = "";
+  render();
+  document.getElementById('search').focus();
+}
+
+function termRowHTML(term){
+  const id = slug(term.t);
+  const isOpen = expandedTerms.has(id);
+  return `
+    <div class="term-row ${isOpen?'expanded':''}">
+      <button class="term-head" onclick="toggleTerm('${id}')">
+        <span class="term-dot" style="background:var(--${levelClass(term.l)})" title="${levelLabel(term.l)}"></span>
+        <span class="term-name">${term.t}</span>
+        <span class="term-cta"></span>
+      </button>
+      <div class="term-def-wrap"><div class="term-def-inner">
+        <div class="term-def-text">${mode==='beginner' ? term.b : term.x}</div>
+        <span class="term-era">${term.e}</span>
+      </div></div>
+    </div>`;
+}
+
+function categoryHTML(cat, q){
+  const rows = TERMS.filter(t => t.c===cat.key && textMatches(t, q));
+  if(rows.length===0) return '';
+  return `
+    <div class="cat-cell">
+      <div class="cat-header">${cat.label} <span class="cat-count">${rows.length}</span></div>
+      <div class="cat-list">${rows.map(termRowHTML).join('')}</div>
+    </div>`;
+}
+
+function render(){
+  const q = query.trim().toLowerCase();
+  const directory = document.getElementById('directory');
+  const totalMatches = TERMS.filter(t => textMatches(t, q)).length;
+
+  document.getElementById('headerStat').textContent =
+    q ? `${totalMatches} of ${TERMS.length} terms match "${query.trim()}"` : `${TERMS.length} terms across ${CATEGORIES.length} categories · 1950s → 2026`;
+
+  if(totalMatches===0){
+    if(!wasEmpty){ currentQuip = EMPTY_QUIPS[Math.floor(Math.random()*EMPTY_QUIPS.length)]; }
+    wasEmpty = true;
+    directory.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon-wrap">
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="10" cy="10" r="6.5"></circle>
+            <line x1="19" y1="19" x2="14.7" y2="14.7"></line>
+          </svg>
+          <span class="empty-badge">?</span>
+        </div>
+        <div class="empty-title">${currentQuip.title}</div>
+        <div class="empty-sub">${currentQuip.sub}</div>
+        <button class="empty-reset" onclick="clearSearch()">Clear search</button>
+      </div>`;
+    return;
+  }
+  wasEmpty = false;
+
+  directory.innerHTML = CATEGORIES.map(cat => categoryHTML(cat, q)).join('');
+}
+
+document.getElementById('search').addEventListener('input', e=>{ query = e.target.value; render(); });
+document.querySelectorAll('.level-toggle button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.level-toggle button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.mode;
+    render();
+  });
+});
+
+render();
+renderCourses();
+</script>
+</body>
+</html>
